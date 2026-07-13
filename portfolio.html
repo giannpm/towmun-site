@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio — tomwmun</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <a class="name-link" href="index.html"><p class="name">tomwmun</p></a>
+      <img class="avatar" src="images/avatar.jpg" alt="Portrait de tomwmun">
+      <nav>
+        <a href="portfolio.html" class="active">Portfolio</a>
+        <a href="flash.html">Flash disponibles</a>
+      </nav>
+    </div>
+    <div class="sidebar-bottom">
+      Basé à Paris<br>
+      <a href="https://instagram.com/tomwmun" target="_blank" rel="noopener">@tomwmun</a><br>
+      <a href="mailto:contact@example.com">Contact</a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <p class="intro">
+      pièces réalisées, blackwork botanique et fine line.
+    </p>
+
+    <div class="grid" id="portfolio-grid"></div>
+  </main>
+
+</div>
+
+<script src="js/portfolio-data.js"></script>
+<script src="js/render-grid.js"></script>
+<script>
+  renderGrid("portfolio-grid", portfolioPieces, "Rien à afficher pour le moment.");
+</script>
+</body>
+</html>

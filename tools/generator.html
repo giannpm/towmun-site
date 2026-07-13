@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Générateur de données — tomwmun</title>
+<style>
+  :root {
+    --ink: #111111;
+    --muted: #8c8c8c;
+    --line: #e4e4e4;
+    --bg: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 24px 80px;
+    background: var(--bg);
+    color: var(--ink);
+    max-width: 720px;
+    margin-inline: auto;
+  }
+  h1 {
+    font-size: 18px;
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  p.lead {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+    max-width: 560px;
+  }
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0 0 24px 0;
+  }
+  legend {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .choice {
+    display: inline-flex;
+    gap: 16px;
+    font-size: 14px;
+  }
+  label.file-drop {
+    display: block;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 28px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+    margin-bottom: 24px;
+  }
+  label.file-drop:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  input[type="file"] {
+    display: none;
+  }
+  .groups {
+    font-size: 13px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .groups .group-name {
+    color: var(--muted);
+  }
+  textarea {
+    width: 100%;
+    min-height: 260px;
+    font-family: "SF Mono", Consolas, Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    resize: vertical;
+    white-space: pre;
+  }
+  button {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 10px 18px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 12px;
+  }
+  button:hover {
+    opacity: 0.85;
+  }
+  button.secondary {
+    background: transparent;
+    color: var(--ink);
+  }
+  .row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Générateur de données</h1>
+<p class="lead">
+  Sélectionne toutes les photos d'un dossier à la fois (portfolio ou flash),
+  cet outil les regroupe automatiquement par pièce et génère le code prêt
+  à coller dans portfolio-data.js ou flash-data.js. Rien n'est envoyé
+  nulle part, tout se passe dans ton navigateur.
+</p>
+
+<fieldset>
+  <legend>Type de contenu</legend>
+  <div class="choice">
+    <label><input type="radio" name="kind" value="portfolio" checked> Portfolio</label>
+    <label><input type="radio" name="kind" value="flash"> Flash disponibles</label>
+  </div>
+</fieldset>
+
+<label class="file-drop">
+  Clique ici pour choisir tes photos (sélection multiple)
+  <input type="file" id="fileInput" accept="image/*" multiple>
+</label>
+
+<div class="groups" id="groups"></div>
+
+<div id="output" style="display:none;">
+  <textarea id="codeOutput" readonly></textarea>
+  <div class="row">
+    <button id="copyBtn">Copier le code</button>
+    <button class="secondary" id="downloadBtn">Télécharger le fichier .js</button>
+  </div>
+  <p class="note">
+    Colle ce code à la place du contenu de js/portfolio-data.js ou
+    js/flash-data.js selon ce que tu as choisi, puis redéploie sur Netlify.
+  </p>
+</div>
+
+<script>
+  const fileInput = document.getElementById("fileInput");
+  const groupsEl = document.getElementById("groups");
+  const outputEl = document.getElementById("output");
+  const codeOutput = document.getElementById("codeOutput");
+  const copyBtn = document.getElementById("copyBtn");
+  const downloadBtn = document.getElementById("downloadBtn");
+
+  function getKind() {
+    return document.querySelector('input[name="kind"]:checked').value;
+  }
+
+  // Groups filenames like piece-02.jpg, piece-02b.jpg, piece-02c.jpg together.
+  // A group key is the filename with any trailing single letter (before the
+  // extension) stripped off. Files with no trailing letter sort first.
+  function groupFiles(files) {
+    const pattern = /^(.*?)([a-z]?)\.(jpg|jpeg|png|webp)$/i;
+    const groups = {};
+
+    files.forEach(function (file) {
+      const match = file.name.match(pattern);
+      if (!match) return;
+      const base = match[1];
+      const letter = match[2] || "";
+      const key = base;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push({ name: file.name, letter: letter });
+    });
+
+    return Object.keys(groups)
+      .sort()
+      .map(function (key) {
+        const items = groups[key].sort(function (a, b) {
+          return a.letter.localeCompare(b.letter);
+        });
+        return { key: key, files: items.map(function (i) { return i.name; }) };
+      });
+  }
+
+  function buildCode(kind, groups) {
+    const folder = kind === "portfolio" ? "images/portfolio/" : "images/flash/";
+    const varName = kind === "portfolio" ? "portfolioPieces" : "flashDesigns";
+
+    const blocks = groups.map(function (g) {
+      if (g.files.length === 1) {
+        return '  {\n    src: "' + folder + g.files[0] + '",\n    alt: "À décrire"\n  }';
+      }
+      const list = g.files.map(function (f) {
+        return '      "' + folder + f + '"';
+      }).join(",\n");
+      return '  {\n    images: [\n' + list + '\n    ],\n    alt: "À décrire"\n  }';
+    });
+
+    return "const " + varName + " = [\n" + blocks.join(",\n") + "\n];\n";
+  }
+
+  fileInput.addEventListener("change", function () {
+    const files = Array.from(fileInput.files);
+    if (files.length === 0) return;
+
+    const kind = getKind();
+    const groups = groupFiles(files);
+
+    groupsEl.innerHTML = groups.map(function (g) {
+      return '<div><span class="group-name">' + g.key + '</span> — ' + g.files.join(", ") + "</div>";
+    }).join("");
+
+    const code = buildCode(kind, groups);
+    codeOutput.value = code;
+    outputEl.style.display = "block";
+  });
+
+  copyBtn.addEventListener("click", function () {
+    codeOutput.select();
+    document.execCommand("copy");
+    copyBtn.textContent = "Copié";
+    setTimeout(function () { copyBtn.textContent = "Copier le code"; }, 1500);
+  });
+
+  downloadBtn.addEventListener("click", function () {
+    const kind = getKind();
+    const filename = kind === "portfolio" ? "portfolio-data.js" : "flash-data.js";
+    const blob = new Blob([codeOutput.value], { type: "text/javascript" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+</script>
+
+</body>
+</html>

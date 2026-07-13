@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flash disponibles — tomwmun</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <a class="name-link" href="index.html"><p class="name">tomwmun</p></a>
+      <img class="avatar" src="images/avatar.jpg" alt="Portrait de tomwmun">
+      <nav>
+        <a href="portfolio.html">Portfolio</a>
+        <a href="flash.html" class="active">Flash disponibles</a>
+      </nav>
+    </div>
+    <div class="sidebar-bottom">
+      Basé à Paris<br>
+      <a href="https://instagram.com/tomwmun" target="_blank" rel="noopener">@tomwmun</a><br>
+      <a href="mailto:contact@example.com">Contact</a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <p class="intro">
+      flashs disponibles, un exemplaire chacun. écris-moi en dm ou par mail pour réserver.
+    </p>
+
+    <div class="grid" id="flash-grid"></div>
+  </main>
+
+</div>
+
+<script src="js/flash-data.js"></script>
+<script src="js/render-grid.js"></script>
+<script>
+  renderGrid("flash-grid", flashDesigns, "Tous les flashs sont pris pour le moment, nouveaux dessins bientôt.");
+</script>
+</body>
+</html>

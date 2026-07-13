@@ -30,6 +30,13 @@ function renderGrid(containerId, items, emptyLabel) {
     if (photos.length > 1) {
       figure.classList.add("multi");
 
+      // Preload every photo in this set right away, so the click just
+      // swaps to an image already in the browser's cache, no delay.
+      photos.forEach(function (src) {
+        const preload = new Image();
+        preload.src = src;
+      });
+
       const dots = document.createElement("div");
       dots.className = "dots";
       photos.forEach(function () {

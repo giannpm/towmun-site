@@ -26,6 +26,7 @@
   --bg: #ffffff;
   --sidebar-width: 280px;
   --gap: 18px;
+  color-scheme: light;
   font-family: "Cabinet Grotesk", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -229,10 +230,6 @@ a:hover {
   .grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .content {
-    padding: 24px;
-  }
-}
   .content {
     padding: 24px;
   }
